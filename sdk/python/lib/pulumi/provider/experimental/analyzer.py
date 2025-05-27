@@ -352,7 +352,16 @@ class Analyzer:
                 f"ComponentResource '{component.__name__}' requires an argument named 'args' with a type annotation in its __init__ method"
             )
 
-        (inputs, inputs_mapping) = self.analyze_type(args, is_component_output=False)
+        # hotfix args: start with a bad solution
+        if hasattr(args, "__init__"):
+            (inputs, inputs_mapping) = self.analyze_type(
+                args.__init__, is_component_output=False
+            )
+        else:
+            (inputs, inputs_mapping) = self.analyze_type(
+                args, is_component_output=False
+            )
+
         (outputs, outputs_mapping) = self.analyze_type(
             component, is_component_output=True
         )
