@@ -445,7 +445,9 @@ class Analyzer:
         indicating that they can potentially be plain.
         """
         optional = optional if optional is not None else is_optional(arg)
-        if is_simple(arg):
+        if arg is None:
+            raise(Exception(f"{name} has typ=None"))
+        elif is_simple(arg):
             return PropertyDefinition(
                 type=py_type_to_property_type(arg),
                 optional=optional,
