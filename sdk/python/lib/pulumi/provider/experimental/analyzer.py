@@ -326,7 +326,9 @@ class Analyzer:
         """
         if sys.version_info >= (3, 10):
             # Only available in 3.10 and later
-            return inspect.get_annotations(o)
+            ann = inspect.get_annotations(o)
+            ann.pop("return", None)
+            return ann
         else:
             # On Python 3.9 and older, __annotations__ is not guaranteed to be
             # present. Additionally, if the class has no annotations, and it is
@@ -446,7 +448,7 @@ class Analyzer:
         """
         optional = optional if optional is not None else is_optional(arg)
         if arg is None:
-            raise(Exception(f"{name} has typ=None"))
+            raise(Exception(f"{name} has an annotation with no type None"))
         elif is_simple(arg):
             return PropertyDefinition(
                 type=py_type_to_property_type(arg),
