@@ -355,7 +355,11 @@ class Analyzer:
             )
 
         # hotfix args: start with a bad solution
-        if hasattr(args, "__init__"):
+        # this breaks TypedDicts...
+        from dataclasses import is_dataclass
+
+        if is_dataclass(args):
+            # then analyze __init__
             (inputs, inputs_mapping) = self.analyze_type(
                 args.__init__, is_component_output=False
             )
@@ -448,7 +452,7 @@ class Analyzer:
         """
         optional = optional if optional is not None else is_optional(arg)
         if arg is None:
-            raise(Exception(f"{name} has an annotation with no type None"))
+            raise (Exception(f"{name} has an annotation with no type None"))
         elif is_simple(arg):
             return PropertyDefinition(
                 type=py_type_to_property_type(arg),
