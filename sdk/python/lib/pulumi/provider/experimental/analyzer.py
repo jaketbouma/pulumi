@@ -326,7 +326,9 @@ class Analyzer:
         """
         if sys.version_info >= (3, 10):
             # Only available in 3.10 and later
-            return inspect.get_annotations(o)
+            ann = inspect.get_annotations(o)
+            ann.pop("return", None)
+            return ann
         else:
             # On Python 3.9 and older, __annotations__ is not guaranteed to be
             # present. Additionally, if the class has no annotations, and it is
@@ -352,7 +354,20 @@ class Analyzer:
                 f"ComponentResource '{component.__name__}' requires an argument named 'args' with a type annotation in its __init__ method"
             )
 
-        (inputs, inputs_mapping) = self.analyze_type(args, is_component_output=False)
+        # hotfix args: start with a bad solution
+        # this breaks TypedDicts...
+        from dataclasses import is_dataclass
+
+        if is_dataclass(args):
+            # then analyze __init__
+            (inputs, inputs_mapping) = self.analyze_type(
+                args.__init__, is_component_output=False
+            )
+        else:
+            (inputs, inputs_mapping) = self.analyze_type(
+                args, is_component_output=False
+            )
+
         (outputs, outputs_mapping) = self.analyze_type(
             component, is_component_output=True
         )
@@ -436,7 +451,9 @@ class Analyzer:
         indicating that they can potentially be plain.
         """
         optional = optional if optional is not None else is_optional(arg)
-        if is_simple(arg):
+        if arg is None:
+            raise (Exception(f"{name} has an annotation with no type None"))
+        elif is_simple(arg):
             return PropertyDefinition(
                 type=py_type_to_property_type(arg),
                 optional=optional,
